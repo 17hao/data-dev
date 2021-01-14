@@ -1,4 +1,4 @@
-package xyz.shiqihao.app.spark
+package xyz.shiqihao.spark
 
 import org.apache.spark.sql.SparkSession
 
