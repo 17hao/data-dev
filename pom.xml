@@ -89,7 +89,16 @@
             <artifactId>spark-streaming_2.12</artifactId>
             <version>2.4.3</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.apache.phoenix</groupId>
+            <artifactId>phoenix-client</artifactId>
+            <version>4.15.0-HBase-1.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-client</artifactId>
+            <version>2.2.5</version>
+        </dependency>
     </dependencies>
     <repositories>
         <repository>
