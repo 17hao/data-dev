@@ -19,6 +19,7 @@ public class ProducerTest1 {
         Properties properties = new Properties();
         InputStream inputStream = ProducerTest1.class.getClassLoader().getResourceAsStream("kafka.properties");
         properties.load(inputStream);
+
         KafkaProducer<String, String> producer = new KafkaProducer<>(properties);
         ProducerRecord<String, String> record = new ProducerRecord<>("test-topic", args[0]);
         RecordMetadata metadata = producer.send(record).get();
