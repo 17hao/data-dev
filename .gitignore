@@ -4,3 +4,7 @@
 
 .idea
 target
+
+*output
+test.*
+Test.*

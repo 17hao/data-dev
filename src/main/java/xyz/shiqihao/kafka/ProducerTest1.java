@@ -6,7 +6,9 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Instant;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -21,8 +23,10 @@ public class ProducerTest1 {
         properties.load(inputStream);
 
         KafkaProducer<String, String> producer = new KafkaProducer<>(properties);
-        ProducerRecord<String, String> record = new ProducerRecord<>("test-topic", args[0]);
-        RecordMetadata metadata = producer.send(record).get();
-        System.out.println(metadata.topic() + " -> " + metadata.partition() + " -> " + metadata.offset());
+        for (int i = 0; i < 100; i++) {
+            ProducerRecord<String, String> record = new ProducerRecord<>("test-topic", Instant.now().toString(), UUID.randomUUID().toString());
+            RecordMetadata metadata = producer.send(record).get();
+            System.out.println(metadata.topic() + " -> " + metadata.partition() + " -> " + metadata.offset());
+        }
     }
 }

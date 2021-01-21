@@ -1,5 +1,6 @@
 package xyz.shiqihao.kafka;
 
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -19,6 +20,7 @@ public class ConsumerTest2 {
         Properties properties = new Properties();
         InputStream inputStream = ConsumerTest2.class.getClassLoader().getResourceAsStream("kafka.properties");
         properties.load(inputStream);
+        properties.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties);
         TopicPartition tp = new TopicPartition("test-topic", 0);
         consumer.assign(Collections.singleton(tp));
