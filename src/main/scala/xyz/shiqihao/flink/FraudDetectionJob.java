@@ -2,7 +2,7 @@ package xyz.shiqihao.flink;
 
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
+import org.apache.flink.streaming.api.functions.ProcessFunction;
 import org.apache.flink.util.Collector;
 
 /**
@@ -17,6 +17,7 @@ public class FraudDetectionJob {
 
         DataStream<Alert> alerts = transactions
                 .keyBy(Transaction::getAccountId)
+                .flatMap(new Deduplicator())
                 .process(new FraudDetector())
                 .name("fraud-detector");
 
@@ -26,7 +27,7 @@ public class FraudDetectionJob {
     }
 }
 
-class FraudDetector extends KeyedProcessFunction<Long, Transaction, Alert> {
+class FraudDetector extends ProcessFunction<Transaction, Alert> {
     private static final long serialVersionUID = 1L;
 
     private static final double SMALL_AMOUNT = 1.00;
