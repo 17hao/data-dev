@@ -8,7 +8,7 @@ import org.apache.hadoop.hbase.client.ConnectionFactory;
 
 import java.io.IOException;
 
-public class HbaseAdminClient {
+public class AdminClient {
     public static void main(String[] args) throws IOException {
         Configuration conf = HBaseConfiguration.create();
         conf.set("hbase.zookeeper.quorum", "39.99.43.51");
