@@ -14,21 +14,23 @@ import java.io.IOException;
 import java.util.StringTokenizer;
 
 /**
+ * yarn jar xxx.jar [main class] [args]
+ *
  * Job.submit() => JobSubmitter.submitJobInternal() => YARNRunner.submitJob() =>
  * ResourceMgrDelegate.submitApplication() => YarnClientImpl.submitApplication() =>
  * ApplicationClientProtocol.submitApplication()
  */
 public class WordCount {
     public static class TokenizerMapper extends Mapper<Object, Text, Text, IntWritable> {
-        private static final IntWritable one = new IntWritable(1);
-        private final Text word = new Text();
+        private static final IntWritable ONE = new IntWritable(1);
+        private static final Text WORD = new Text();
 
         @Override
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
             StringTokenizer itr = new StringTokenizer(value.toString());
             while (itr.hasMoreTokens()) {
-                word.set(itr.nextToken());
-                context.write(word, one);
+                WORD.set(itr.nextToken());
+                context.write(WORD, ONE);
             }
         }
     }
