@@ -2,6 +2,9 @@ package xyz.shiqihao.spark
 
 import org.apache.spark.sql.SparkSession
 
+/**
+ * quick start
+ */
 object SimpleApp {
   def main(args: Array[String]) {
     val logFile = "/opt/spark-2.4.7-bin-hadoop2.7/README.md" // Should be some file on your system
