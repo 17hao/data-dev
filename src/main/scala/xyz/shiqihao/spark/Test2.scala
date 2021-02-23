@@ -12,7 +12,7 @@ object Test2 {
     val text = sc.textFile(projectDir + "/src/main/resources/data.txt")
     val pairs = text.map(s => (s.split(",")(0), 1))
     val counts = pairs.reduceByKey((a, b) => a + b)
+    println(counts.toDebugString)
     println(counts.sortByKey().collect().mkString("Array(", ", ", ")"))
-    while (true) {}
   }
 }
