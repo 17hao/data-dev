@@ -17,6 +17,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.StringTokenizer;
 
 /**
  * 相同的key对应的value会被划分到同一个reducer中
@@ -68,7 +69,7 @@ public class JoinRecordsWithStationName extends Configured implements Tool {
         FileOutputFormat.setOutputPath(job, output);
 
         job.setPartitionerClass(KeyPartitioner.class);
-        job.setGroupingComparatorClass(TextPair.FirstComparator.class);
+        //job.setGroupingComparatorClass(TextPair.FirstComparator.class);
 
         job.setMapOutputKeyClass(TextPair.class);
         job.setReducerClass(JoinReducer.class);
@@ -85,26 +86,50 @@ public class JoinRecordsWithStationName extends Configured implements Tool {
     }
 }
 
-
 class JoinStationMapper extends Mapper<LongWritable, Text, TextPair, Text> {
     @Override
     protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-        String[] strings = value.toString().split(",");
-        String stationId = strings[0];
-        String stationName = strings[1];
-        context.write(new TextPair(stationId, "0"), new Text(stationName));
-
+        StringTokenizer itr = new StringTokenizer(value.toString());
+        while (itr.hasMoreTokens()) {
+            String[] strings = itr.nextToken().split(",");
+            String stationId = strings[0];
+            String stationName = strings[1];
+            context.write(new TextPair(stationId, "0"), new Text(stationName));
+        }
     }
 }
 
 class JoinRecordMapper extends Mapper<LongWritable, Text, TextPair, Text> {
     @Override
     protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-        String[] strings = value.toString().split(",");
-        String stationId = strings[0];
-        context.write(new TextPair(stationId, "1"), value);
+        StringTokenizer itr = new StringTokenizer(value.toString());
+        while (itr.hasMoreTokens()) {
+            String[] strings = itr.nextToken().split(",");
+            String stationId = strings[0];
+            context.write(new TextPair(stationId, "1"), value);
+        }
     }
 }
+
+//class JoinStationMapper extends Mapper<LongWritable, Text, TextPair, Text> {
+//    @Override
+//    protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+//        String[] strings = value.toString().split(",");
+//        String stationId = strings[0];
+//        String stationName = strings[1];
+//        context.write(new TextPair(stationId, "0"), new Text(stationName));
+//
+//    }
+//}
+//
+//class JoinRecordMapper extends Mapper<LongWritable, Text, TextPair, Text> {
+//    @Override
+//    protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+//        String[] strings = value.toString().split(",");
+//        String stationId = strings[0];
+//        context.write(new TextPair(stationId, "1"), value);
+//    }
+//}
 
 class JoinReducer extends Reducer<TextPair, Text, Text, Text> {
     @Override
