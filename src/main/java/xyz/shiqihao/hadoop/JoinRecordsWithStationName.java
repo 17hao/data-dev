@@ -17,33 +17,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.StringTokenizer;
 
-/**
- * 相同的key对应的value会被划分到同一个reducer中
- *
- * reduce的输入只能保证key是有序的，但无法保证同一个key对应的多个value的顺序
- * 要使value按照一定的顺序排序，可以用secondary sort
- *
- * secondary sort可以使value按照一定的顺序排序，将原始的key和value组成一对新的key，
- * 按组合键的key进行排序使得value也被排序
- *
- * sort comparator和grouping comparator的区别：
- * 1. sort comparator决定了key在进入Reducer之前的排序方式
- * 2. grouping comparator决定了哪一批次的key会出现在同一次reduce方法调用中
- *
- * shuffle 过程中的 partition 和 group
- * - 最简单的模型：输出Text键值对，相同key被partition到一块，并且group到一块，最终进入同一次reduce中，
- * 这些key对应的value在同一个reduce方法的values中
- *
- * 如何决定Reducer的数量？
- *
- * Mapper如何将输入进行分片？
- * 按照不同的输入格式，InputFormat.getSplits()方法决定了按何种大小划分输入格式的字节块，
- * 得到分片后由每种具体的InputFormat.createRecordReader()，e.g. TextInputFormat，决定如何将InputSplit转换成Mapper的key-value。
- * TextInputFormat.createRecordReader()将分片按文件中的行转化成Mapper的输入，key是每行首字母的字节序号，value是每一行内容。
- * ApplicationMaster负责将记录传输给Mapper
- */
 public class JoinRecordsWithStationName extends Configured implements Tool {
     public static void main(String... args) throws Exception {
         int exitCode = ToolRunner.run(new JoinRecordsWithStationName(), args);
@@ -69,7 +43,7 @@ public class JoinRecordsWithStationName extends Configured implements Tool {
         FileOutputFormat.setOutputPath(job, output);
 
         job.setPartitionerClass(KeyPartitioner.class);
-        //job.setGroupingComparatorClass(TextPair.FirstComparator.class);
+        job.setGroupingComparatorClass(TextPair.FirstComparator.class);
 
         job.setMapOutputKeyClass(TextPair.class);
         job.setReducerClass(JoinReducer.class);
@@ -89,47 +63,21 @@ public class JoinRecordsWithStationName extends Configured implements Tool {
 class JoinStationMapper extends Mapper<LongWritable, Text, TextPair, Text> {
     @Override
     protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-        StringTokenizer itr = new StringTokenizer(value.toString());
-        while (itr.hasMoreTokens()) {
-            String[] strings = itr.nextToken().split(",");
-            String stationId = strings[0];
-            String stationName = strings[1];
-            context.write(new TextPair(stationId, "0"), new Text(stationName));
-        }
+        String[] strings = value.toString().split(",");
+        String stationId = strings[0];
+        String stationName = strings[1];
+        context.write(new TextPair(stationId, "0"), new Text(stationName));
     }
 }
 
 class JoinRecordMapper extends Mapper<LongWritable, Text, TextPair, Text> {
     @Override
     protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-        StringTokenizer itr = new StringTokenizer(value.toString());
-        while (itr.hasMoreTokens()) {
-            String[] strings = itr.nextToken().split(",");
-            String stationId = strings[0];
-            context.write(new TextPair(stationId, "1"), value);
-        }
+        String[] strings = value.toString().split(",");
+        String stationId = strings[0];
+        context.write(new TextPair(stationId, "1"), value);
     }
 }
-
-//class JoinStationMapper extends Mapper<LongWritable, Text, TextPair, Text> {
-//    @Override
-//    protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-//        String[] strings = value.toString().split(",");
-//        String stationId = strings[0];
-//        String stationName = strings[1];
-//        context.write(new TextPair(stationId, "0"), new Text(stationName));
-//
-//    }
-//}
-//
-//class JoinRecordMapper extends Mapper<LongWritable, Text, TextPair, Text> {
-//    @Override
-//    protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-//        String[] strings = value.toString().split(",");
-//        String stationId = strings[0];
-//        context.write(new TextPair(stationId, "1"), value);
-//    }
-//}
 
 class JoinReducer extends Reducer<TextPair, Text, Text, Text> {
     @Override
