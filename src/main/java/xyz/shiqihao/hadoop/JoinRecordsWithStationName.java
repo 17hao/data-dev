@@ -110,8 +110,8 @@ class TextPair implements WritableComparable<TextPair> {
         set(new Text(first), new Text(second));
     }
 
-    public TextPair(Text first, Text second) {
-        set(first, second);
+    public TextPair(TextPair textPair) {
+        set(textPair.first, textPair.second);
     }
 
     public void set(Text first, Text second) {
@@ -121,6 +121,10 @@ class TextPair implements WritableComparable<TextPair> {
 
     public Text getFirst() {
         return first;
+    }
+
+    public Text getSecond() {
+        return second;
     }
 
     @Override
