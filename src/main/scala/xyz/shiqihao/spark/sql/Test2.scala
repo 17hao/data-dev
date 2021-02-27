@@ -7,7 +7,7 @@ object Test2 {
     val spark = SparkSession
       .builder()
       .appName("test5")
-      .config("spark.master", "local[*]") // comment this line if submit to yarn
+      .master("local[*]") // comment this line if submit to yarn
       .getOrCreate()
 
     spark.read

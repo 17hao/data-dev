@@ -7,7 +7,7 @@ object Test3 {
     val spark = SparkSession
       .builder()
       .appName("Create Dataset")
-      .config("spark.master", "local[*]")
+      .master("local[*]")
       .getOrCreate()
 
     import spark.implicits._

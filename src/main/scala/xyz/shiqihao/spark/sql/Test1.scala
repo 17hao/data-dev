@@ -7,7 +7,7 @@ object Test1 {
     val spark = SparkSession
       .builder()
       .appName("test-1")
-      .config("spark.master", "local[*]")
+      .master("local[*]")
       .getOrCreate()
 
     import spark.implicits._
