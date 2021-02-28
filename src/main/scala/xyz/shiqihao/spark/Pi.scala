@@ -9,7 +9,9 @@ object Pi {
   private val STEP_NUM = 100000
 
   def main(args: Array[String]): Unit = {
-    val conf = new SparkConf().setAppName("Pi").setMaster("local[*]")
+    val conf = new SparkConf()
+      .setAppName("Pi")
+//      .setMaster("local[*]")
     val sc = SparkContext.getOrCreate(conf)
     val count = sc.range(1, STEP_NUM).filter { _ =>
       val x = Math.random()

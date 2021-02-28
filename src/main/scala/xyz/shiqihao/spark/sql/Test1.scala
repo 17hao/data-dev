@@ -7,12 +7,12 @@ object Test1 {
     val spark = SparkSession
       .builder()
       .appName("test-1")
-      .master("local[*]")
+//      .master("local[*]")
       .getOrCreate()
 
     import spark.implicits._
 
-    val df = spark.read.json(System.getProperty("user.dir") + "/src/main/resources/people.json")
+    val df = spark.read.json("hdfs:///user/people.json")
 
     df.show()
 
