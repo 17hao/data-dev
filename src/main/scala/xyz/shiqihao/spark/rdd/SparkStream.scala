@@ -1,4 +1,4 @@
-package xyz.shiqihao.spark
+package xyz.shiqihao.spark.rdd
 
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.{Seconds, StreamingContext}

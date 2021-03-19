@@ -1,18 +1,21 @@
-package xyz.shiqihao.spark
+package xyz.shiqihao.spark.rdd
 
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.sql.SparkSession
 
 import java.util.Random
 
 /**
- * Usage GroupByTest [numMappers] [numKVPairs] [numReducers]
+ * Usage GroupByTest [numMappers] [numKVPairs] [valSize] [numReducers]
  */
 object GroupByTest {
   def main(args: Array[String]): Unit = {
-    val sparkConf = new SparkConf()
-      .setAppName("GroupBy Test")
-      .setMaster("local[*]")
-    val sc = SparkContext.getOrCreate(sparkConf)
+    val spark = SparkSession.builder()
+      .appName("GroupBy Test")
+      //      .master("local[*]")
+      .config("spark.eventLog.enabled", value = true)
+      .config("spark.eventLog.dir", "hdfs://localhost:9000/spark-log")
+      .getOrCreate()
+    val sc = spark.sparkContext
 
     val numMappers = if (args.length > 0) args(0).toInt else 2
     val numKVPairs = if (args.length > 1) args(1).toInt else 1000
