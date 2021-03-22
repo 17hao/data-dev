@@ -1,17 +1,23 @@
 package xyz.shiqihao.flink;
 
-import org.apache.flink.streaming.api.functions.source.SourceFunction;
+import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
 
-class TransactionSource implements SourceFunction<Transaction> {
-    private volatile boolean isRunning = true;
+import java.util.Random;
+
+public class TransactionSource extends RichParallelSourceFunction<Transaction> {
+    private boolean isRunning = true;
 
     @Override
     public void run(SourceContext<Transaction> ctx) throws Exception {
-        final Transaction transaction = new Transaction();
-        transaction.setAccountId(123456L);
-
+        Random random = new Random();
         while (isRunning) {
+            Transaction transaction = new Transaction(
+                    random.nextInt(10000),
+                    System.currentTimeMillis(),
+                    random.nextInt(8)
+            );
             ctx.collect(transaction);
+            Thread.sleep(500);
         }
     }
 
