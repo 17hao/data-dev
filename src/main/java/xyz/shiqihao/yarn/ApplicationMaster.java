@@ -1,75 +1,78 @@
 package xyz.shiqihao.yarn;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.yarn.api.protocolrecords.RegisterApplicationMasterResponse;
-import org.apache.hadoop.yarn.api.records.Container;
-import org.apache.hadoop.yarn.api.records.ContainerLaunchContext;
+import org.apache.hadoop.yarn.api.protocolrecords.AllocateResponse;
+import org.apache.hadoop.yarn.api.records.*;
 import org.apache.hadoop.yarn.client.api.AMRMClient;
-import org.apache.hadoop.yarn.client.api.async.AMRMClientAsync;
-import org.apache.hadoop.yarn.client.api.async.NMClientAsync;
+import org.apache.hadoop.yarn.client.api.NMClient;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.Records;
 
 import java.io.IOException;
-
+import java.util.Collections;
 
 public class ApplicationMaster {
-    private final Configuration conf;
+    public static void main(String[] args) throws IOException, YarnException, InterruptedException {
+        int containerNum = 2;
+        Configuration conf = new YarnConfiguration();
+        AMRMClient<AMRMClient.ContainerRequest> rmClient = AMRMClient.createAMRMClient();
+        rmClient.init(conf);
+        rmClient.start();
 
-    private final AMRMClientAsync amRMClient;
-    private final NMClientAsync nmClient;
-    private final AMRMClientAsync.AbstractCallbackHandler allocatorHandler;
-    private final NMClientAsync.AbstractCallbackHandler containerListener;
-
-    private final String appHostName = "aliyun";
-    private final int numTotalContainers = 2;
-    private final int containerMemory = 512;
-    private final String appJar = "~/xxx.jar";
-    private final int priority = 0;
-
-    public ApplicationMaster() {
-        conf = new YarnConfiguration();
-        allocatorHandler = new RMCallbackHandler();
-        amRMClient = AMRMClientAsync.createAMRMClientAsync(1000, allocatorHandler);
-        containerListener = new NMCallbackHandler();
-        nmClient = NMClientAsync.createNMClientAsync(containerListener);
-    }
-
-    public static void main(String[] args) {
-    }
-
-    private void run() throws IOException, YarnException {
-        amRMClient.init(conf);
-        amRMClient.start();
-
+        NMClient nmClient = NMClient.createNMClient();
         nmClient.init(conf);
         nmClient.start();
 
-        RegisterApplicationMasterResponse response = amRMClient.registerApplicationMaster("", 9999, "google.com");
+        // register with resource manager
+        rmClient.registerApplicationMaster("localhost", 0, "");
 
-        long maxMem = response.getMaximumResourceCapability().getMemorySize();
+        Priority priority = Records.newRecord(Priority.class);
+        priority.setPriority(0);
 
-        for (int i = 0; i < numTotalContainers; i++) {
-            AMRMClient.ContainerRequest containerRequest = AMRMClient.ContainerRequest.newBuilder().build();
-            amRMClient.addContainerRequest(containerRequest);
-        }
-    }
+        Resource capability = Records.newRecord(Resource.class);
+        capability.setMemorySize(256);
+        capability.setVirtualCores(1);
 
-    private class LaunchContainerRunnable implements Runnable {
-        Container container;
-        NMCallbackHandler containerListener;
-
-        LaunchContainerRunnable(Container container, NMCallbackHandler containerListener) {
-            this.container = container;
-            this.containerListener = containerListener;
+        // make container request to resource manager
+        for (int i = 0; i < containerNum; i++) {
+            AMRMClient.ContainerRequest containerRequest = new AMRMClient.ContainerRequest(capability, null, null, priority);
+            rmClient.addContainerRequest(containerRequest);
         }
 
-        @Override
-        public void run() {
-            ContainerLaunchContext ctx = Records.newRecord(ContainerLaunchContext.class);
-            //containerListener.container
-            nmClient.startContainerAsync(container, ctx);
+        // obtain allocated containers and launch
+        int allocatedContainers = 0;
+        int completedContainers = 0;
+        while (allocatedContainers < containerNum) {
+            AllocateResponse response = rmClient.allocate(0);
+            for (Container c : response.getAllocatedContainers()) {
+                allocatedContainers++;
+
+                // launch container by create ContainerLaunchContext
+                ContainerLaunchContext ctx = Records.newRecord(ContainerLaunchContext.class);
+                ctx.setCommands(Collections.singletonList("java -jar /Users/17hao/springboot.jar"));
+
+                nmClient.startContainer(c, ctx);
+            }
+
+            for (ContainerStatus status : response.getCompletedContainersStatuses()) {
+                completedContainers++;
+                System.out.println("Completed container: " + status);
+            }
+            Thread.sleep(100);
         }
+
+        // wait for the remaining containers to complete
+        while (completedContainers < containerNum) {
+            AllocateResponse response = rmClient.allocate(completedContainers / containerNum);
+            for (ContainerStatus status : response.getCompletedContainersStatuses()) {
+                completedContainers++;
+                System.out.println("Completed container: " + status);
+            }
+        }
+
+        rmClient.unregisterApplicationMaster(FinalApplicationStatus.SUCCEEDED, "", "");
+
+        System.out.println("hello, world");
     }
 }
